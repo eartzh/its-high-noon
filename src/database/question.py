@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -264,3 +264,16 @@ class QuestionsManager:
         Reset the tracking of returned questions, allowing all questions to be returned again.
         """
         self._returned_questions.clear()
+
+
+    def get_all_subject(self) -> List[str]:
+        """Retrieve all subjects."""
+        try:
+            with self.conn.cursor() as cur:
+                cur.execute("SELECT DISTINCT subject FROM questions")
+                total_subjects = cur.fetchall()
+
+                return [x for x, in total_subjects]
+
+        except psycopg2.Error as e:
+            raise Exception(f"Error retrieving random question: {e}")

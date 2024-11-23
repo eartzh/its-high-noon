@@ -34,8 +34,6 @@ def get_env_or_default(key: str, default: T) -> T:
         return r
 
 
-### CONST VALUE BEFORE INIT ###
-
 setup_logger()
 
 NAME = "It's high noon"

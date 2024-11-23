@@ -1,6 +1,6 @@
 from quart import render_template
 
-from src.const import APP, SCHEDULER
+from src.const import APP, SCHEDULER, QUESTIONS_DATABASE
 
 
 @APP.route("/", methods=["GET"])
@@ -18,8 +18,6 @@ from src import line
 
 APP.route("/line_bot_webhook", methods=["POST"])(line.webhook.callback)
 
-APP.route("/db/question", methods=["GET"])(line.daily.make_question)
-APP.route("/db/answer", methods=["GET"])(line.daily.make_answer)
 
 #######################
 
