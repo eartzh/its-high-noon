@@ -1,4 +1,5 @@
 services:
+
   web:
     build:
       context: .
@@ -17,6 +18,7 @@ services:
     depends_on:
       - db
     command: poetry run python run.py
+    restart: unless-stopped
 
   db:
     image: postgres:15-alpine
@@ -28,6 +30,7 @@ services:
       - POSTGRES_DB=app
     ports:
       - "5432:5432"
+    restart: unless-stopped
 
 
 volumes:

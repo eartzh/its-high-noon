@@ -1,8 +1,11 @@
+from datetime import datetime
+
 from quart import render_template
 
 from src.const import APP, SCHEDULER, QUESTIONS_DATABASE
 
 
+## Register routers ###
 @APP.route("/", methods=["GET"])
 async def hello_world():
     return "OK", 200
@@ -13,17 +16,16 @@ async def teapot():
     return await render_template("teapot.html"), 418
 
 
-## Register routers ###
 from src import line
 
 APP.route("/line_bot_webhook", methods=["POST"])(line.webhook.callback)
-
 
 #######################
 
 ## Register scheduler ##
 
 line.daily.register()
+
 
 
 ########################
