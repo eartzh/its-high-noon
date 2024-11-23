@@ -13,6 +13,7 @@ line-bot-sdk = "3.14.2"
 python-dotenv = "^1.0.1"
 quart = "^0.19.9"
 psycopg2 = "^2.9.10"
+schedule = "^1.2.2"
 
 
 [build-system]
