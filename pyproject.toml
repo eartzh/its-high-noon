@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "its-high-noon"
+version = "0.1.0"
+description = ""
+authors = ["iceice666 <iceice666@outlook.com>"]
+license = "AGPL-3.0"
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.13"
+line-bot-sdk = "3.14.2"
+python-dotenv = "^1.0.1"
+quart = "^0.19.9"
+psycopg2 = "^2.9.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
