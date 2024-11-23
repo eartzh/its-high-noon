@@ -84,6 +84,27 @@ class QuestionsManager:
         except psycopg2.Error as e:
             raise Exception(f"Unable to connect to database: {e}")
 
+        self.create_table_if_not_exists()
+
+
+    def create_table_if_not_exists(self):
+        try:
+            self.conn.cursor().execute("""
+                CREATE TABLE IF NOT EXISTS Questions
+                (
+                    id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                    subject     text NOT NULL,
+                    description text NOT NULL,
+                    opts        text NOT NULL,
+                    ans         text NOT NULL,
+                    explanation text,
+                    details     text
+                );
+            """)
+        except psycopg2.Error as e:
+            self.conn.rollback()
+            raise Exception(f"Error creating question: {e}")
+
     def disconnect(self) -> None:
         """Close database connection."""
         self.conn.close()
