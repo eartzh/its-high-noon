@@ -7,6 +7,7 @@ import logging
 
 LOGGER = logging.getLogger("db.question")
 
+
 @dataclasses.dataclass
 class Question:
     id: str
@@ -29,6 +30,11 @@ class Question:
 
     def make_full(self):
         return f"{self.make_question()}\n\n{self.make_answer()}\n\n{self.details}"
+
+    def verify_answer(self, answer: str) -> bool:
+        """Checks if the answer is correct."""
+        answer = answer.strip()
+        return answer == self.ans.lower()
 
 
 class QuestionsManager:
@@ -85,7 +91,6 @@ class QuestionsManager:
             raise Exception(f"Unable to connect to database: {e}")
 
         self.create_table_if_not_exists()
-
 
     def create_table_if_not_exists(self):
         try:
@@ -242,7 +247,6 @@ class QuestionsManager:
                 cur.execute("SELECT COUNT(*) FROM questions")
                 total_questions = cur.fetchone()['count']
 
-
                 # If all questions have been returned
                 if len(self._returned_questions) >= total_questions:
                     if reset_if_exhausted:
@@ -285,7 +289,6 @@ class QuestionsManager:
         Reset the tracking of returned questions, allowing all questions to be returned again.
         """
         self._returned_questions.clear()
-
 
     def get_all_subject(self) -> List[str]:
         """Retrieve all subjects."""
