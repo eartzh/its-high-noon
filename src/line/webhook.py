@@ -1,7 +1,7 @@
 from linebot.v3.exceptions import InvalidSignatureError
 from linebot.v3.messaging import ApiClient, MessagingApi, ReplyMessageRequest, TextMessage
 from linebot.v3.webhooks import MessageEvent, TextMessageContent
-from src.line.daily import handle_message
+from src.database.id import NotificationManager
 from pydantic import StrictStr, StrictBool
 from quart import request, abort
 
@@ -75,8 +75,33 @@ def message_text(event: MessageEvent) -> None:
         send_reply(event, "Sorry, I couldn't process your message. Please try again later.")
 
 
-def process_message(text: str) -> StrictStr:
+def process_message(event: MessageEvent) -> StrictStr:
     """Process incoming message and generate reply."""
-    handle_message(event)
-    # TODO: Implement message processing logic here
-    return text  # Echo back for now
+    user_message = event.message.text
+    source_type = event.source.type
+
+    if source_type == "group":
+        group_id = event.source.group_id
+        if user_message == "開啟通知":
+            notification_manager.add_group(group_id)
+            reply_text = "此群組已成功啟用通知功能！"
+    elif source_type == "user":
+        user_id = event.source.user_id
+        if user_message == "開啟通知":
+            notification_manager.add_user(user_id)
+            reply_text = "您已成功啟用通知功能！"
+    else:
+        reply_text = "目前不支援此類型的來源。"
+
+    with ApiClient(CONFIGURATION) as api_client:
+        line_bot_api = MessagingApi(api_client)
+        line_bot_api.reply_message(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[TextMessage(text=reply_text)]
+            )
+        )
+
+    return reply_text
+
+
