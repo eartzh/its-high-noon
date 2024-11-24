@@ -1,6 +1,7 @@
 from linebot.v3.exceptions import InvalidSignatureError
 from linebot.v3.messaging import ApiClient, MessagingApi, ReplyMessageRequest, TextMessage
 from linebot.v3.webhooks import MessageEvent, TextMessageContent
+from src.line.daily import handle_message
 from pydantic import StrictStr, StrictBool
 from quart import request, abort
 
@@ -76,5 +77,6 @@ def message_text(event: MessageEvent) -> None:
 
 def process_message(text: str) -> StrictStr:
     """Process incoming message and generate reply."""
+    handle_message(event)
     # TODO: Implement message processing logic here
     return text  # Echo back for now

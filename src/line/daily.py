@@ -1,7 +1,6 @@
 import logging
 import uuid
 from datetime import datetime
-from pathlib import Path
 
 from src.const import SCHEDULER, QUESTIONS_DATABASE
 from linebot.v3.messaging import (
@@ -15,41 +14,20 @@ from pydantic import StrictStr
 
 from src.database.question import Question
 from src.line import CONFIGURATION
+from src.database.id import NotificationManager
 
 LOGGER = logging.getLogger(__name__)
 
 TODAY_QUESTION: Question | None = None
 RAN_OUT_QUESTIONS = "We ran out of questions!!!"
-USER_IDS_FILE = Path("user_ids.txt")
-GROUP_IDS_FILE = Path("group_ids.txt") 
 
-def get_user_ids() -> list[str]:
-    if USER_IDS_FILE.exists():
-        with open(USER_IDS_FILE, "r") as file:
-            return [line.strip() for line in file.readlines()]
-    return []
-
-
-def add_user_id(user_id: str):
-    user_ids = set(get_user_ids())
-    if user_id not in user_ids:
-        with open(USER_IDS_FILE, "a") as file:
-            file.write(f"{user_id}\n")
-
-
-def get_group_ids() -> list[str]:
-    if GROUP_IDS_FILE.exists():
-        with open(GROUP_IDS_FILE, "r") as file:
-            return [line.strip() for line in file.readlines()]
-    return []
-
-
-def add_group_id(group_id: str):
-    group_ids = set(get_group_ids())
-    if group_id not in group_ids:
-        with open(GROUP_IDS_FILE, "a") as file:
-            file.write(f"{group_id}\n")
-
+notification_manager = NotificationManager(
+    dbname="your_dbname",
+    user="your_username",
+    password="your_password",
+    host="your_host",
+    port=5432
+)
 
 def make_question() -> str:
     LOGGER.info("Making question")
@@ -71,8 +49,8 @@ def countdown() -> int:
 
 
 def send_question():
-    user_ids = get_user_ids()
-    group_ids = get_group_ids()
+    user_ids = notification_manager.get_all_users()
+    group_ids = notification_manager.get_all_groups()
 
     with ApiClient(CONFIGURATION) as api_client:
         line_bot_api = MessagingApi(api_client)
@@ -89,9 +67,9 @@ def send_question():
                         ]
                     )
                 )
-                LOGGER.info(f"問題已發送至用戶 {user_id}")
+                LOGGER.info(f"Question sent to user {user_id}")
             except Exception as e:
-                LOGGER.error(f"發送至用戶 {user_id} 時出現錯誤: {e}")
+                LOGGER.error(f"Error sending message to user {user_id}: {e}")
 
         for group_id in group_ids:
             try:
@@ -105,14 +83,14 @@ def send_question():
                         ]
                     )
                 )
-                LOGGER.info(f"問題已發送至群組 {group_id}")
+                LOGGER.info(f"Question sent to group {group_id}")
             except Exception as e:
-                LOGGER.error(f"發送至群組 {group_id} 時出現錯誤: {e}")
+                LOGGER.error(f"Error sending message to group {group_id}: {e}")
 
 
 def send_answer():
-    user_ids = get_user_ids()
-    group_ids = get_group_ids()
+    user_ids = notification_manager.get_all_users()
+    group_ids = notification_manager.get_all_groups()
 
     with ApiClient(CONFIGURATION) as api_client:
         line_bot_api = MessagingApi(api_client)
@@ -128,9 +106,9 @@ def send_answer():
                         ]
                     )
                 )
-                LOGGER.info(f"答案已發送至用戶 {user_id}")
+                LOGGER.info(f"Answer sent to user {user_id}")
             except Exception as e:
-                LOGGER.error(f"發送至用戶 {user_id} 時出現錯誤: {e}")
+                LOGGER.error(f"Error sending message to user {user_id}: {e}")
 
         for group_id in group_ids:
             try:
@@ -143,9 +121,9 @@ def send_answer():
                         ]
                     )
                 )
-                LOGGER.info(f"答案已發送至群組 {group_id}")
+                LOGGER.info(f"Answer sent to group {group_id}")
             except Exception as e:
-                LOGGER.error(f"發送至群組 {group_id} 時出現錯誤: {e}")
+                LOGGER.error(f"Error sending message to group {group_id}: {e}")
 
 
 def handle_message(event):
@@ -155,12 +133,12 @@ def handle_message(event):
     if source_type == "group":
         group_id = event.source.group_id
         if user_message == "開啟通知":
-            add_group_id(group_id)
+            notification_manager.add_group(group_id)
             reply_text = "此群組已成功啟用通知功能！"
     elif source_type == "user":
         user_id = event.source.user_id
         if user_message == "開啟通知":
-            add_user_id(user_id)
+            notification_manager.add_user(user_id)
             reply_text = "您已成功啟用通知功能！"
     else:
         reply_text = "目前不支援此類型的來源。"

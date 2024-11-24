@@ -8,7 +8,7 @@ from quart.logging import default_handler
 from src import scheduler
 from src.logger import setup_logger
 from src.database.question import QuestionsManager
-
+from src.database.id import NotificationManager
 T = TypeVar("T")
 
 load_dotenv()
