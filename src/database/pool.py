@@ -22,7 +22,26 @@ class ConnectionPool:
     def close(self):
         self.pool.closeall()
 
-    def execute(self, query: str, args: List[str]) -> List[Tuple[Any, ...]]:
+    def execute(self, query: str, args: List[str] = ()) -> List[Tuple[Any, ...]] | None:
+        """
+        Execute an SQL query and fetch the results.
+
+        This method retrieves a connection from the connection pool, executes the provided SQL
+        query with given arguments, commits the transaction and returns the results.
+        If no results are returned after execution, it returns None.
+        Any other SQL error raises an exception and performs a rollback.
+
+        :param query: The SQL query to be executed
+        :type query: str
+
+        :param args: The arguments to be passed to the SQL query
+        :type args: List[str]
+
+        :return: The results of the query as a list of dictionary rows, or None if there is no result
+        :rtype: List[DictRow[Any, ...]] | None
+
+        :raises Exception: If unable to execute the query due to an error
+        """
         conn = self.pool.getconn()
         try:
             with conn.cursor() as cur:
@@ -30,6 +49,9 @@ class ConnectionPool:
                 conn.commit()
 
                 return cur.fetchall()
+
+        except psycopg2.ProgrammingError:
+            return None
 
         except psycopg2.Error as e:
             conn.rollback()
