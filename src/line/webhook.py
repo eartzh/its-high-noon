@@ -115,8 +115,11 @@ def process_message(ctx: ProcessContext) -> StrictStr | None:
     if isinstance(ctx.event.message, TextMessageContent):
         text = ctx.event.message.text.strip()
         if text.startswith("/"):
-            cmd, args = text.split(" ", 1)
-            return cmd_dispatch(cmd[1:], args, ctx)
+            args = text.split(" ", 1)
+            if len(args) < 2:
+                return cmd_dispatch(args[0], "", ctx)
+            else:
+                return cmd_dispatch(args[0], args[1], ctx)
         elif ("uwu", "UwU", "OuO", "ouo").__contains__(text):
             return "Ciallo (∠·ω )⌒★"
 
