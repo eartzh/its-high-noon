@@ -1,10 +1,15 @@
+import dataclasses
+import logging
+from typing import Optional
+
 from linebot.v3.exceptions import InvalidSignatureError
-from linebot.v3.messaging import ApiClient, MessagingApi, ReplyMessageRequest, TextMessage
-from linebot.v3.webhooks import MessageEvent, TextMessageContent
+from linebot.v3.messaging import ApiClient, MessagingApi, ReplyMessageRequest, TextMessage, ShowLoadingAnimationRequest
+from linebot.v3.webhooks import MessageEvent, TextMessageContent, UserSource
 from pydantic import StrictStr, StrictBool
 from quart import request, abort
 
-import logging
+from src.const import USERS_DATABASE, I18N
+from src.i18n import Keys
 from src.line import HANDLER, CONFIGURATION
 
 LOGGER = logging.getLogger("line-webhook")
@@ -56,25 +61,70 @@ def send_reply(event: MessageEvent, reply_text: StrictStr) -> None:
         )
 
 
+def loading_animate(chat_id: str) -> None:
+    """Send a loading animation to LINE."""
+    with ApiClient(CONFIGURATION) as api_client:
+        line_bot_api = MessagingApi(api_client)
+        line_bot_api.show_loading_animation(show_loading_animation_request=ShowLoadingAnimationRequest(
+            loadingSeconds=20,
+            chatId=StrictStr(chat_id)
+        ))
+
+
+#########################################################
+
+@dataclasses.dataclass
+class ProcessContext:
+    event: MessageEvent
+    user_id: Optional[str]
+    lang: Optional[str]
+
+
 @HANDLER.add(MessageEvent, message=TextMessageContent)
-def message_text(event: MessageEvent) -> None:
+def message(event: MessageEvent) -> None:
     """Handle incoming text messages."""
     try:
-        received: str = event.message.text
-        LOGGER.debug("Received text: %s", received)
+        LOGGER.debug("Received request: %s", event)
 
-        reply = process_message(received)
+        user_id = None
+        if isinstance(event.source, UserSource):
+            user_id = event.source.user_id
+            loading_animate(user_id)
+            USERS_DATABASE.add_user(user_id)
+
+        ctx = ProcessContext(event, user_id, USERS_DATABASE.get_user_lang(user_id))
+
+        reply = process_message(ctx)
+
         LOGGER.debug("Sent reply: %s", reply)
-
         send_reply(event, reply)
 
     except Exception as e:
         LOGGER.error("Error processing message: %s", str(e), exc_info=True)
         # Send a generic error message to user
-        send_reply(event, "Sorry, I couldn't process your message. Please try again later.")
+        send_reply(event, I18N.get(Keys.PROCESSING_ERROR))
 
 
-def process_message(text: str) -> StrictStr:
+def process_message(ctx: ProcessContext) -> StrictStr:
     """Process incoming message and generate reply."""
-    # TODO: Implement message processing logic here
-    return text  # Echo back for now
+    # A text event
+    if isinstance(ctx.event.message, TextMessageContent):
+        if ctx.event.message.text.startswith("/"):
+            cmd, args = ctx.event.message.text.split(" ", 1)
+            return cmd_dispatch(cmd[1:], args, ctx)
+
+    return ""
+
+
+def cmd_dispatch(cmd: str, args: str, ctx: ProcessContext) -> str:
+    match cmd:
+        case "help":
+            return I18N.get(Keys.CMD_HELP, ctx.lang)
+        case "toggle":
+            status = USERS_DATABASE.toggle_enabled()
+            if status:
+                return I18N.get(Keys.CMD_TOGGLE_ENABLE, ctx.lang)
+            else:
+                return I18N.get(Keys.CMD_TOGGLE_DISABLE, ctx.lang)
+        case _:
+            return I18N.get(Keys.CMD_UNKNOWN, ctx.lang)

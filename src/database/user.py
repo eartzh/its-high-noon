@@ -1,9 +1,8 @@
 import dataclasses
-from typing import Optional, Dict, Any, List
+import logging
+from typing import Dict, List
 
 import psycopg2
-from psycopg2.extras import RealDictCursor
-import logging
 
 LOGGER = logging.getLogger("db.user")
 
@@ -12,6 +11,7 @@ LOGGER = logging.getLogger("db.user")
 class Users:
     id: str
     enabled: bool
+    lang: str
 
 
 class UsersManager:
@@ -31,7 +31,8 @@ class UsersManager:
                 CREATE TABLE IF NOT EXISTS Users
                 (
                     id      text NOT NULL PRIMARY KEY,
-                    enabled boolean NOT NULL DEFAULT FALSE
+                    enabled boolean NOT NULL DEFAULT FALSE,
+                    lang  text NOT NULL DEFAULT 'en'
                 );
             """)
         except psycopg2.Error as e:
@@ -68,26 +69,60 @@ class UsersManager:
             raise Exception(f"Error deleting question: {e}")
 
     def toggle_enabled(self, user_id: str) -> bool:
-        """Toggle the enabled status of a user."""
+        """Toggle the enabled status of a user and return the new status."""
         try:
             with self.conn.cursor() as cur:
-                query = "UPDATE Users SET enabled = NOT enabled WHERE id = %s"
-                cur.execute(query, (True, user_id))
-                return cur.rowcount > 0
+                query = "UPDATE Users SET enabled = NOT enabled WHERE id = %s RETURNING enabled"
+                cur.execute(query, user_id)
+                return cur.fetchone()[0]
         except psycopg2.Error as e:
             self.conn.rollback()
             raise Exception(f"Error updating question: {e}")
 
-
-    def get_enabled_users(self) -> List[str]:
+    def get_enabled_users(self) -> Dict[str, List[str]]:
         """Return a list of enabled users."""
         try:
             with self.conn.cursor() as cur:
-                query = "SELECT id FROM Users WHERE enabled = TRUE"
+                query = "SELECT id, lang FROM Users WHERE enabled = TRUE"
                 cur.execute(query)
                 result = cur.fetchall()
-                return [x for x, in result]
+                users = {}
+
+                for user_id, lang in result:
+                    users.get(lang, []).append(user_id)
+
+                return users
 
         except psycopg2.Error as e:
             raise Exception(f"Error getting enabled users: {e}")
 
+    def get_all_users(self) -> Dict[str, List[str]]:
+        """Return a list of all users."""
+        try:
+            with self.conn.cursor() as cur:
+                query = "SELECT id, lang FROM Users"
+                cur.execute(query)
+                result = cur.fetchall()
+                users = {}
+
+                for user_id, lang in result:
+                    users.get(lang, []).append(user_id)
+
+                return users
+        except psycopg2.Error as e:
+            raise Exception(f"Error getting all users: {e}")
+
+    def get_user_lang(self, user_id: str) -> None:
+        """Return the language of a user."""
+        if not user_id:
+            return None
+
+        try:
+            with self.conn.cursor() as cur:
+                query = "SELECT lang FROM Users WHERE id = %s"
+                cur.execute(query, (user_id,))
+                result = cur.fetchone()
+                return result[0] if result else None
+
+        except psycopg2.Error as e:
+            raise Exception(f"Error getting user language: {e}")
