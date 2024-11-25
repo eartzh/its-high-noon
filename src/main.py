@@ -54,7 +54,7 @@ def local_only(f):
 ## Register routers ###
 @APP.route("/", methods=["GET"])
 async def hello_world():
-    return "OK", 200
+    return "Hello world from server!", 200
 
 
 @APP.route("/teapot", methods=["GET"])
@@ -78,14 +78,14 @@ async def new_question():
 
     for f in fields:
         if f not in data:
-            return "", 400
+            return f"{f}", 400
         fields_data.append(data[f])
 
     fields_data.append(data["explanation"])
     fields_data.append(data["details"])
 
     question.create(*fields_data)
-
+    return "", 200
 
 #######################
 
