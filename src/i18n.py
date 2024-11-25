@@ -32,3 +32,4 @@ class Keys(enum.Enum):
     CMD_TOGGLE_DISABLE = 'cmd_toggle_disable'
     CMD_UNKNOWN = 'cmd_unknown'
     PROCESSING_ERROR = 'processing_error'
+    SET_LANG = 'set_lang'

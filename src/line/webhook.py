@@ -41,7 +41,7 @@ async def callback():
         abort(500, description="Internal server error")
 
 
-def send_reply(event: MessageEvent, reply_text: StrictStr) -> None:
+def send_reply(event: MessageEvent, reply_text: str) -> None:
     """Send a reply message to LINE."""
 
     with ApiClient(CONFIGURATION) as api_client:
@@ -52,7 +52,7 @@ def send_reply(event: MessageEvent, reply_text: StrictStr) -> None:
                 notificationDisabled=StrictBool(False),
                 messages=[
                     TextMessage(
-                        text=reply_text,
+                        text=StrictStr(reply_text),
                         quickReply=None,
                         quoteToken=None,
                     )
@@ -93,7 +93,11 @@ def message(event: MessageEvent) -> None:
             loading_animate(user_id)
             user.create(user_id)
 
-        ctx = ProcessContext(event, user_id, user.get_lang(user_id))
+        ctx = ProcessContext(event, user_id, user.get_lang(user_id) if user_id else None)
+        LOGGER.debug(
+            "Context: user_id=%s, lang=%s",
+            ctx.user_id, ctx.lang
+        )
 
         reply = process_message(ctx)
 
@@ -109,17 +113,18 @@ def message(event: MessageEvent) -> None:
         send_reply(event, I18N.get(Keys.PROCESSING_ERROR))
 
 
-def process_message(ctx: ProcessContext) -> StrictStr | None:
+def process_message(ctx: ProcessContext) -> str | None:
     """Process incoming message and generate reply."""
     # A text event
     if isinstance(ctx.event.message, TextMessageContent):
         text = ctx.event.message.text.strip()
         if text.startswith("/"):
             args = text.split(" ", 1)
+            cmd = args[0][1:]
             if len(args) < 2:
-                return cmd_dispatch(args[0], "", ctx)
+                return cmd_dispatch(cmd, "", ctx)
             else:
-                return cmd_dispatch(args[0], args[1], ctx)
+                return cmd_dispatch(cmd, args[1], ctx)
         elif ("uwu", "UwU", "OuO", "ouo").__contains__(text):
             return "Ciallo (∠·ω )⌒★"
 
@@ -136,5 +141,9 @@ def cmd_dispatch(cmd: str, args: str, ctx: ProcessContext) -> str:
                 return I18N.get(Keys.CMD_TOGGLE_ENABLE, ctx.lang)
             else:
                 return I18N.get(Keys.CMD_TOGGLE_DISABLE, ctx.lang)
+        case "lang":
+            lang = args
+            user.set_lang(ctx.user_id, lang)
+            return I18N.get(Keys.SET_LANG, ctx.lang).format(lang)
         case _:
             return I18N.get(Keys.CMD_UNKNOWN, ctx.lang)

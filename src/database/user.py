@@ -52,12 +52,17 @@ def get_all() -> Dict[str, List[str]]:
     return users
 
 
-def get_lang(user_id: Optional[str]) -> Optional[bool]:
-    if not user_id:
-        return None
+def get_lang(user_id: str) -> Optional[bool]:
 
     result = DATABASE.execute(
         "SELECT lang FROM Users WHERE id = %s",
         (user_id,)
     )
     return result[0][0] if result else None
+
+
+def set_lang(user_id: str, lang: str):
+    DATABASE.execute(
+        "UPDATE Users SET lang = %s WHERE id = %s",
+        (lang, user_id)
+    )
