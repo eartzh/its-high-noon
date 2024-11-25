@@ -10,7 +10,8 @@ from linebot.v3.messaging import (
 )
 from pydantic import StrictStr
 
-from src.const import SCHEDULER, QUESTIONS_DATABASE, USERS_DATABASE, I18N
+from src.const import SCHEDULER, I18N
+from src.database import question, user
 from src.database.question import Question
 from src.i18n import Keys
 from src.line import CONFIGURATION
@@ -23,7 +24,7 @@ TODAY_QUESTION: Question | None = None
 def make_question() -> str | None:
     LOGGER.info("Making question")
     global TODAY_QUESTION
-    TODAY_QUESTION = QUESTIONS_DATABASE.random_question(True)
+    TODAY_QUESTION = question.random_one(True)
     return TODAY_QUESTION.make_question() if TODAY_QUESTION else None
 
 
@@ -57,12 +58,12 @@ def send_msgs(msgs, users: List[str]):
 
 
 def send_question():
-    targets = USERS_DATABASE.get_enabled_users()
+    targets = user.get_enabled()
     for (lang, users) in targets.items():
-        question = make_question() or I18N.get(Keys.RAN_OUT_QUESTIONS, lang)
+        question_text = make_question() or I18N.get(Keys.RAN_OUT_QUESTIONS, lang)
 
         send_msgs([TextMessage(
-            text=StrictStr(question),
+            text=StrictStr(question_text),
             emojis=None,
             quoteToken=None,
             quickReply=None
@@ -70,12 +71,12 @@ def send_question():
 
 
 def send_answer():
-    targets = USERS_DATABASE.get_enabled_users()
+    targets = user.get_enabled()
     for (lang, users) in targets.items():
-        answer = make_answer() or I18N.get(Keys.RAN_OUT_QUESTIONS, lang)
+        answer_text = make_answer() or I18N.get(Keys.RAN_OUT_QUESTIONS, lang)
 
         send_msgs([TextMessage(
-            text=StrictStr(answer),
+            text=StrictStr(answer_text),
             emojis=None,
             quoteToken=None,
             quickReply=None
@@ -83,7 +84,7 @@ def send_answer():
 
 
 def send_countdown():
-    targets = USERS_DATABASE.get_all_users()
+    targets = user.get_all()
 
     for (lang, users) in targets.items():
         text = I18N.get(Keys.COUNTDOWN, lang).format(countdown())

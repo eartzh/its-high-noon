@@ -6,15 +6,16 @@ from dotenv import load_dotenv
 from quart import Quart
 from quart.logging import default_handler
 
-from src import scheduler
-from src.database.question import QuestionsManager
-from src.database.user import UsersManager
+from src import scheduler, database
+from src.database.pool import ConnectionPool
 from src.i18n import I18nManager
 from src.logger import setup_logger
 
 T = TypeVar("T")
 
+NAME = "It's high noon"
 load_dotenv()
+setup_logger()
 
 
 def get_env(key: str) -> str | None:
@@ -37,7 +38,6 @@ def get_env_or_default(key: str, default: T) -> T:
         return r
 
 
-
 LINE_CHANNEL_SECRET = get_env_or_exit("LINE_CHANNEL_SECRET")
 LINE_CHANNEL_ACCESS_TOKEN = get_env_or_exit("LINE_CHANNEL_ACCESS_TOKEN")
 
@@ -47,12 +47,10 @@ DB_USER = get_env_or_exit("DB_USER")
 DB_HOST = get_env_or_default("DB_HOST", "localhost")
 DB_PASSWORD = get_env_or_exit("DB_PASSWORD")
 
-QUESTIONS_DATABASE = QuestionsManager(DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT)
-USERS_DATABASE = UsersManager(DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT)
+DATABASE = ConnectionPool(DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT)
+database.user.init_db()
+database.question.init_db()
 
-setup_logger()
-
-NAME = "It's high noon"
 
 APP = Quart(NAME)
 getLogger(APP.name).removeHandler(default_handler)

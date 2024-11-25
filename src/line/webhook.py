@@ -8,7 +8,8 @@ from linebot.v3.webhooks import MessageEvent, TextMessageContent, UserSource
 from pydantic import StrictStr, StrictBool
 from quart import request, abort
 
-from src.const import USERS_DATABASE, I18N
+from src.const import I18N
+from src.database import user
 from src.i18n import Keys
 from src.line import HANDLER, CONFIGURATION
 
@@ -90,9 +91,9 @@ def message(event: MessageEvent) -> None:
         if isinstance(event.source, UserSource):
             user_id = event.source.user_id
             loading_animate(user_id)
-            USERS_DATABASE.add_user(user_id)
+            user.create(user_id)
 
-        ctx = ProcessContext(event, user_id, USERS_DATABASE.get_user_lang(user_id))
+        ctx = ProcessContext(event, user_id, user.get_lang(user_id))
 
         reply = process_message(ctx)
 
@@ -121,7 +122,7 @@ def cmd_dispatch(cmd: str, args: str, ctx: ProcessContext) -> str:
         case "help":
             return I18N.get(Keys.CMD_HELP, ctx.lang)
         case "toggle":
-            status = USERS_DATABASE.toggle_enabled()
+            status = user.toggle_enabled(ctx.user_id)
             if status:
                 return I18N.get(Keys.CMD_TOGGLE_ENABLE, ctx.lang)
             else:

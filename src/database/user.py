@@ -1,33 +1,10 @@
-import dataclasses
-import logging
-from typing import Dict, List
+from typing import Dict, List, Optional
 
-import psycopg2
-
-LOGGER = logging.getLogger("db.user")
+from src.const import DATABASE
 
 
-@dataclasses.dataclass
-class Users:
-    id: str
-    enabled: bool
-    lang: str
-
-
-class UsersManager:
-    def __init__(self, dbname: str, user: str, password: str, host: str = 'localhost', port: int = 5432):
-        """Initialize database connection."""
-        try:
-            LOGGER.info(f"Connecting to database {dbname}@{host}:{port}")
-            self.conn = psycopg2.connect(dbname=dbname, user=user, password=password, host=host, port=port)
-        except psycopg2.Error as e:
-            raise Exception(f"Unable to connect to database: {e}")
-
-        self.create_table_if_not_exists()
-
-    def create_table_if_not_exists(self):
-        try:
-            self.conn.cursor().execute("""
+def init_db():
+    DATABASE.execute("""
                 CREATE TABLE IF NOT EXISTS Users
                 (
                     id      text NOT NULL PRIMARY KEY,
@@ -35,94 +12,49 @@ class UsersManager:
                     lang  text NOT NULL DEFAULT 'en'
                 );
             """)
-        except psycopg2.Error as e:
-            self.conn.rollback()
-            raise Exception(f"Error creating user table: {e}")
 
-    def disconnect(self) -> None:
-        """Close database connection."""
-        self.conn.close()
 
-    def add_user(self, user_id: str) -> bool:
-        """Add a user to the database."""
-        try:
-            (self.conn.cursor()
-            .execute(
-                """INSERT INTO Users (id, enabled) VALUES (%s, False)""",
-                (user_id,)))
+def create(user_id: str):
+    DATABASE.execute("INSERT INTO Users (id, enabled) VALUES (%s, False)", (user_id,))
 
-            return True
-        except psycopg2.Error as e:
-            self.conn.rollback()
-            raise Exception(f"Error creating user table: {e}")
 
-    def remove_user(self, user_id: str) -> bool:
-        """Delete a user by its ID."""
-        try:
-            with self.conn.cursor() as cur:
-                query = "DELETE FROM Users WHERE id = %s"
-                cur.execute(query, (user_id,))
-                self.conn.commit()
-                return cur.rowcount > 0
-        except psycopg2.Error as e:
-            self.conn.rollback()
-            raise Exception(f"Error deleting question: {e}")
+def remove(user_id: str):
+    DATABASE.execute("DELETE FROM Users WHERE id = %s", (user_id,))
 
-    def toggle_enabled(self, user_id: str) -> bool:
-        """Toggle the enabled status of a user and return the new status."""
-        try:
-            with self.conn.cursor() as cur:
-                query = "UPDATE Users SET enabled = NOT enabled WHERE id = %s RETURNING enabled"
-                cur.execute(query, user_id)
-                return cur.fetchone()[0]
-        except psycopg2.Error as e:
-            self.conn.rollback()
-            raise Exception(f"Error updating question: {e}")
 
-    def get_enabled_users(self) -> Dict[str, List[str]]:
-        """Return a list of enabled users."""
-        try:
-            with self.conn.cursor() as cur:
-                query = "SELECT id, lang FROM Users WHERE enabled = TRUE"
-                cur.execute(query)
-                result = cur.fetchall()
-                users = {}
+def toggle_enabled(user_id: str):
+    result = DATABASE.execute(
+        "UPDATE Users SET enabled = NOT enabled WHERE id = %s RETURNING enabled",
+        (user_id,),
+    )
 
-                for user_id, lang in result:
-                    users.get(lang, []).append(user_id)
+    return result[0][0]
 
-                return users
 
-        except psycopg2.Error as e:
-            raise Exception(f"Error getting enabled users: {e}")
+def get_enabled() -> Dict[str, List[str]]:
+    result = DATABASE.execute("SELECT id, lang FROM Users WHERE enabled = TRUE")
+    users = {}
+    for user_id, lang in result:
+        users.get(lang, []).append(user_id)
 
-    def get_all_users(self) -> Dict[str, List[str]]:
-        """Return a list of all users."""
-        try:
-            with self.conn.cursor() as cur:
-                query = "SELECT id, lang FROM Users"
-                cur.execute(query)
-                result = cur.fetchall()
-                users = {}
+    return users
 
-                for user_id, lang in result:
-                    users.get(lang, []).append(user_id)
 
-                return users
-        except psycopg2.Error as e:
-            raise Exception(f"Error getting all users: {e}")
+def get_all() -> Dict[str, List[str]]:
+    result = DATABASE.execute("SELECT id, lang FROM Users")
+    users = {}
+    for user_id, lang in result:
+        users.get(lang, []).append(user_id)
 
-    def get_user_lang(self, user_id: str) -> None:
-        """Return the language of a user."""
-        if not user_id:
-            return None
+    return users
 
-        try:
-            with self.conn.cursor() as cur:
-                query = "SELECT lang FROM Users WHERE id = %s"
-                cur.execute(query, (user_id,))
-                result = cur.fetchone()
-                return result[0] if result else None
 
-        except psycopg2.Error as e:
-            raise Exception(f"Error getting user language: {e}")
+def get_lang(user_id: Optional[str]) -> Optional[bool]:
+    if not user_id:
+        return None
+
+    result = DATABASE.execute(
+        "SELECT lang FROM Users WHERE id = %s",
+        (user_id,)
+    )
+    return result[0][0] if result else None
