@@ -15,7 +15,10 @@ def init_db():
 
 
 def create(user_id: str):
-    DATABASE.execute("INSERT INTO Users (id, enabled) VALUES (%s, False)", (user_id,))
+    DATABASE.execute(
+        "INSERT INTO Users (id, enabled) VALUES (%s, False) ON CONFLICT (id) DO NOTHING",
+        (user_id,)
+    )
 
 
 def remove(user_id: str):

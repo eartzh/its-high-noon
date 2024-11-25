@@ -37,7 +37,7 @@ def make_answer() -> str | None:
 def countdown() -> int:
     gsat_data = datetime(2025, 1, 18)
     today = datetime.now()
-    return (gsat_data - today).days
+    return (gsat_data - today).days + 1
 
 
 def send_msgs(msgs, users: List[str]):

@@ -97,6 +97,9 @@ def message(event: MessageEvent) -> None:
 
         reply = process_message(ctx)
 
+        if not reply:
+            return
+
         LOGGER.debug("Sent reply: %s", reply)
         send_reply(event, reply)
 
@@ -106,15 +109,18 @@ def message(event: MessageEvent) -> None:
         send_reply(event, I18N.get(Keys.PROCESSING_ERROR))
 
 
-def process_message(ctx: ProcessContext) -> StrictStr:
+def process_message(ctx: ProcessContext) -> StrictStr | None:
     """Process incoming message and generate reply."""
     # A text event
     if isinstance(ctx.event.message, TextMessageContent):
-        if ctx.event.message.text.startswith("/"):
-            cmd, args = ctx.event.message.text.split(" ", 1)
+        text = ctx.event.message.text.strip()
+        if text.startswith("/"):
+            cmd, args = text.split(" ", 1)
             return cmd_dispatch(cmd[1:], args, ctx)
+        elif ("uwu", "UwU", "OuO", "ouo").__contains__(text):
+            return "Ciallo (∠·ω )⌒★"
 
-    return ""
+    return None
 
 
 def cmd_dispatch(cmd: str, args: str, ctx: ProcessContext) -> str:
