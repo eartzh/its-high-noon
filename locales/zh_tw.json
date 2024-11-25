@@ -1,7 +1,7 @@
 {
   "ran_out_questions": "我們沒題目啦",
   "countdown": "還有{}天就要學測啦",
-  "cmd_help": "所有指令: help, toggle",
+  "cmd_help": "所有指令: help, toggle, lang",
   "cmd_toggle_enable": "你現在將會收到題目",
   "cmd_toggle_disable": "你現在將不會收到題目",
   "cmd_unknown": "未知的指令。輸入「/help」獲得可用的指令。",

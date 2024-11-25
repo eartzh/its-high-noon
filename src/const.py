@@ -49,10 +49,11 @@ from src.database.pool import ConnectionPool
 
 DATABASE = ConnectionPool(DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT)
 
-from src.database import user, question
+from src.database import user, question, limiter
 
 user.init_db()
 question.init_db()
+limiter.init_db()
 
 APP = Quart(NAME)
 getLogger(APP.name).removeHandler(default_handler)
@@ -63,4 +64,4 @@ SCHEDULER = scheduler.Scheduler()
 
 from src.i18n import I18nManager
 
-I18N = I18nManager()
+I18N = I18nManager("./locales", "en")

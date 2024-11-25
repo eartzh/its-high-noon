@@ -1,7 +1,7 @@
 {
   "ran_out_questions": "We ran out of questions!!!",
   "countdown": "{} days remains to GSAT!!!",
-  "cmd_help": "Available commands: help, toggle",
+  "cmd_help": "Available commands: help, toggle, lang",
   "cmd_toggle_enable": "You will receive question from the bot now.",
   "cmd_toggle_disable": "You will not receive question from the bot now.",
   "cmd_unknown": "Unknown command. Type /help for more information.",

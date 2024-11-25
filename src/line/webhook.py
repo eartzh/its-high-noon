@@ -23,7 +23,6 @@ async def callback():
         body = await request.get_data(as_text=True)
 
         LOGGER.info("Received webhook: length=%d", len(body))
-        LOGGER.trace("Request body: %s", body)
 
         HANDLER.handle(body, signature)
         return "OK", 200
