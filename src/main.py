@@ -66,6 +66,27 @@ from src import line
 
 APP.route("/line_bot_webhook", methods=["POST"])(line.webhook.callback)
 
+
+### Sensitive endpoints ###
+@APP.route("/db/question/create", methods=["POST"])
+@local_only
+@rate_limited
+async def new_question():
+    fields = ["subject", "description", "opts", "ans"]
+    fields_data = []
+    data = await request.get_json()
+
+    for f in fields:
+        if f not in data:
+            return "", 400
+        fields_data.append(data[f])
+
+    fields_data.append(data["explanation"])
+    fields_data.append(data["details"])
+
+    question.create(*fields_data)
+
+
 #######################
 
 ## Register scheduler ##

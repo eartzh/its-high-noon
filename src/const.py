@@ -6,15 +6,13 @@ from dotenv import load_dotenv
 from quart import Quart
 from quart.logging import default_handler
 
-from src import scheduler, database
-from src.database.pool import ConnectionPool
-from src.i18n import I18nManager
-from src.logger import setup_logger
-
 T = TypeVar("T")
 
 NAME = "It's high noon"
 load_dotenv()
+
+from src.logger import setup_logger
+
 setup_logger()
 
 
@@ -47,14 +45,22 @@ DB_USER = get_env_or_exit("DB_USER")
 DB_HOST = get_env_or_default("DB_HOST", "localhost")
 DB_PASSWORD = get_env_or_exit("DB_PASSWORD")
 
-DATABASE = ConnectionPool(DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT)
-database.user.init_db()
-database.question.init_db()
+from src.database.pool import ConnectionPool
 
+DATABASE = ConnectionPool(DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT)
+
+from src.database import user, question
+
+user.init_db()
+question.init_db()
 
 APP = Quart(NAME)
 getLogger(APP.name).removeHandler(default_handler)
 
+from src import scheduler
+
 SCHEDULER = scheduler.Scheduler()
+
+from src.i18n import I18nManager
 
 I18N = I18nManager()
