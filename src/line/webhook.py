@@ -1,6 +1,5 @@
 import dataclasses
 import logging
-import random
 from typing import Optional
 
 from linebot.v3.exceptions import InvalidSignatureError
@@ -13,7 +12,7 @@ from src.const import I18N
 from src.database import user
 from src.i18n import Keys, Langs
 from src.line import HANDLER, CONFIGURATION
-from src.line.cmd import CommandBuilder, UnknownCommandError, MissingArgumentsError, NoCommandError
+from src.line.cmd import UnknownCommandError, MissingArgumentsError, NoCommandError, CMD
 
 LOGGER = logging.getLogger("line-webhook")
 
@@ -119,71 +118,6 @@ def message(event: MessageEvent) -> None:
         # Send a generic error message to user
         send_reply(event, I18N.get(Keys.PROCESSING_ERROR))
 
-
-CMD = CommandBuilder()
-
-
-def cmd_help(ctx):
-    return I18N.get(Keys.CMD_HELP, ctx.lang)
-
-
-def cmd_toggle(ctx):
-    status = user.toggle_enabled(ctx.user_id)
-    if status:
-        return I18N.get(Keys.CMD_TOGGLE_ENABLE, ctx.lang)
-    else:
-        return I18N.get(Keys.CMD_TOGGLE_DISABLE, ctx.lang)
-
-
-def cmd_lang(ctx, lang: Optional[str] = None):
-    if not lang:
-        return I18N.get(Keys.AVAILABLE_LANGS, ctx.lang).format(
-            ", ".join(map(lambda l: l.value, Langs))
-        )
-
-    # validate lang
-    lang = Langs.try_from_str(lang)
-
-    if lang is None:
-        return I18N.get(Keys.AVAILABLE_LANGS, ctx.lang).format(
-            ", ".join(map(lambda l: l.value, Langs))
-        )
-
-    lang = lang.value
-
-    user.set_lang(ctx.user_id, lang)
-    return I18N.get(Keys.SET_LANG, ctx.lang).format(lang)
-
-
-def cmd_echo(ctx, msg, ):
-    return msg
-
-
-def cmd_6(ctx):
-    return "6"
-
-
-def cmd_roll(ctx):
-    return random.randint(1, 6)
-
-
-def cmd_scream(ctx):
-    return I18N.get(Keys.CMD_SCREAM, ctx.lang)
-
-
-def cmd_ping(ctx):
-    return "pong"
-
-
-CMD.register_command("help", cmd_help)
-CMD.register_command("toggle", cmd_toggle)
-CMD.register_command("lang", cmd_lang, [], ["lang"])
-CMD.register_command("echo", cmd_echo, ["msg"])
-CMD.register_command("6", cmd_6)
-CMD.register_command("114", cmd_6)
-CMD.register_command("roll", cmd_roll)
-CMD.register_command("scream", cmd_scream)
-CMD.register_command("ping", cmd_ping)
 
 
 def process_message(ctx: ProcessContext) -> str | None:
