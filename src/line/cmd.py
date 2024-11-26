@@ -49,6 +49,7 @@ class CommandBuilder:
 
         command_name, *args = parts
 
+        command_name = command_name.lower()
         if command_name not in self.commands:
             raise UnknownCommandError(command_name)
 
