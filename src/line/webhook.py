@@ -137,6 +137,10 @@ def cmd_lang(lang, ctx):
     return I18N.get(Keys.SET_LANG, ctx.lang).format(lang)
 
 
+def cmd_echo(msg, ctx):
+    return msg
+
+
 def cmd_6(ctx):
     return "6"
 
@@ -144,6 +148,7 @@ def cmd_6(ctx):
 CMD.register_command("help", cmd_help)
 CMD.register_command("toggle", cmd_toggle)
 CMD.register_command("lang", cmd_lang, ["lang"])
+CMD.register_command("echo", cmd_echo, ["msg"])
 CMD.register_command("6", cmd_6)
 
 
@@ -167,8 +172,9 @@ def process_message(ctx: ProcessContext) -> str | None:
             except MissingArgumentsError as e:
                 return I18N.get(Keys.MISSING_ARGS, ctx.lang).format(str(e.missing_args))
 
-        elif ("uwu", "UwU", "OuO", "ouo").__contains__(text):
+        elif ("ouo" in text.lower()
+              or "owo" in text.lower()
+              or "uwu" in text.lower()):
             return "Ciallo (∠·ω )⌒★"
 
     return None
-

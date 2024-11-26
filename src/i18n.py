@@ -11,7 +11,7 @@ class Langs(enum.Enum):
     ZH_TW = 'zh_tw'
 
     @classmethod
-    def from_str(cls, lang: str):
+    def from_str(cls, lang: str, default=EN):
         lang = lang.strip().lower()
 
         if lang is None:
@@ -24,7 +24,8 @@ class Langs(enum.Enum):
         for l in cls:
             if l.value == lang:
                 return l
-        return cls.EN
+
+        return default
 
 
 class Keys(enum.Enum):
