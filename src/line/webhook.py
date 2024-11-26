@@ -4,7 +4,7 @@ from typing import Optional
 
 from linebot.v3.exceptions import InvalidSignatureError
 from linebot.v3.messaging import ApiClient, MessagingApi, ReplyMessageRequest, TextMessage, ShowLoadingAnimationRequest
-from linebot.v3.webhooks import MessageEvent, TextMessageContent, UserSource
+from linebot.v3.webhooks import MessageEvent, TextMessageContent, UserSource, GroupSource
 from pydantic import StrictStr, StrictBool
 from quart import request, abort
 
@@ -87,7 +87,7 @@ def message(event: MessageEvent) -> None:
         LOGGER.debug("Received request: %s", event)
 
         user_id = None
-        if isinstance(event.source, UserSource):
+        if isinstance(event.source, UserSource) or isinstance(event.source, GroupSource):
             user_id = event.source.user_id
             loading_animate(user_id)
             user.create(user_id)
