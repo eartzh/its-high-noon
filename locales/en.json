@@ -7,5 +7,6 @@
   "cmd_unknown": "Unknown command. Type /help for more information.",
   "processing_error": "Sorry, I couldn't process your message. Please try again later.",
   "set_lang": "Set bot message language to {}.",
-  "missing_args": "Missing arguments: {}"
+  "missing_args": "Missing arguments: {}",
+  "available_langs": "Available languages: {}"
 }

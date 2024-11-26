@@ -1,6 +1,6 @@
 import dataclasses
 import logging
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 LOGGER = logging.getLogger("line-webhook-cmd")
 
@@ -30,15 +30,17 @@ class Command:
     name: str
     func: Callable
     required_args: List[str]
+    optional_args: Optional[List[str]]
 
 
 class CommandBuilder:
     def __init__(self):
         self.commands = {}
 
-    def register_command(self, name: str, func: Callable, required_args: List[str] = ()):
-        LOGGER.debug(f"Registering command {name} with args {required_args}")
-        self.commands[name] = Command(name, func, required_args)
+    def register_command(self, name: str, func: Callable, required_args: List[str] = (),
+                         optional_args: Optional[List[str]] = None):
+        LOGGER.debug(f"Registering command {name} with required_args={required_args} and optional_args={optional_args}")
+        self.commands[name] = Command(name, func, required_args, optional_args or [])
 
     def parse_and_execute(self, command_string, ctx=None):
         LOGGER.debug(f"Parsing command {command_string}")
@@ -58,4 +60,5 @@ class CommandBuilder:
         if len(args) < len(command.required_args):
             raise MissingArgumentsError(command_name, command.required_args)
 
+        # Execute command with both required and optional args
         return command.func(*args, ctx=ctx)

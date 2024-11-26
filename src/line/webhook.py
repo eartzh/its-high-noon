@@ -129,8 +129,19 @@ def cmd_toggle(ctx):
 
 
 def cmd_lang(lang, ctx):
+    if not lang:
+        return I18N.get(Keys.AVAILABLE_LANGS, ctx.lang).format(
+            ", ".join(map(lambda l: l.value, Langs))
+        )
+
     # validate lang
-    lang = Langs.from_str(lang)
+    lang = Langs.try_from_str(lang)
+
+    if lang is None:
+        return I18N.get(Keys.AVAILABLE_LANGS, ctx.lang).format(
+            ", ".join(map(lambda l: l.value, Langs))
+        )
+
     lang = lang.value
 
     user.set_lang(ctx.user_id, lang)
@@ -147,7 +158,7 @@ def cmd_6(ctx):
 
 CMD.register_command("help", cmd_help)
 CMD.register_command("toggle", cmd_toggle)
-CMD.register_command("lang", cmd_lang, ["lang"])
+CMD.register_command("lang", cmd_lang, [], ["lang"])
 CMD.register_command("echo", cmd_echo, ["msg"])
 CMD.register_command("6", cmd_6)
 

@@ -12,6 +12,11 @@ class Langs(enum.Enum):
 
     @classmethod
     def from_str(cls, lang: str, default=EN):
+        lang = cls.try_from_str(lang)
+        return lang if lang else default
+
+    @classmethod
+    def try_from_str(cls, lang: str):
         lang = lang.strip().lower()
 
         if lang is None:
@@ -25,7 +30,7 @@ class Langs(enum.Enum):
             if l.value == lang:
                 return l
 
-        return default
+        return None
 
 
 class Keys(enum.Enum):
@@ -38,6 +43,7 @@ class Keys(enum.Enum):
     PROCESSING_ERROR = 'processing_error'
     SET_LANG = 'set_lang'
     MISSING_ARGS = 'missing_args'
+    AVAILABLE_LANGS = 'available_langs'
 
 
 class I18nManager:
