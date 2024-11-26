@@ -1,5 +1,6 @@
 import dataclasses
 import logging
+import random
 from typing import Optional
 
 from linebot.v3.exceptions import InvalidSignatureError
@@ -134,7 +135,7 @@ def cmd_toggle(ctx):
         return I18N.get(Keys.CMD_TOGGLE_DISABLE, ctx.lang)
 
 
-def cmd_lang(lang, ctx):
+def cmd_lang(ctx, lang: Optional[str] = None):
     if not lang:
         return I18N.get(Keys.AVAILABLE_LANGS, ctx.lang).format(
             ", ".join(map(lambda l: l.value, Langs))
@@ -154,7 +155,7 @@ def cmd_lang(lang, ctx):
     return I18N.get(Keys.SET_LANG, ctx.lang).format(lang)
 
 
-def cmd_echo(msg, ctx):
+def cmd_echo(ctx, msg, ):
     return msg
 
 
@@ -162,11 +163,27 @@ def cmd_6(ctx):
     return "6"
 
 
+def cmd_roll(ctx):
+    return random.randint(1, 6)
+
+
+def cmd_scream(ctx):
+    return I18N.get(Keys.CMD_SCREAM, ctx.lang)
+
+
+def cmd_ping(ctx):
+    return "pong"
+
+
 CMD.register_command("help", cmd_help)
 CMD.register_command("toggle", cmd_toggle)
 CMD.register_command("lang", cmd_lang, [], ["lang"])
 CMD.register_command("echo", cmd_echo, ["msg"])
 CMD.register_command("6", cmd_6)
+CMD.register_command("114", cmd_6)
+CMD.register_command("roll", cmd_roll)
+CMD.register_command("scream", cmd_scream)
+CMD.register_command("ping", cmd_ping)
 
 
 def process_message(ctx: ProcessContext) -> str | None:

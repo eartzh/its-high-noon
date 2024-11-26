@@ -8,5 +8,6 @@
   "processing_error": "Sorry, I couldn't process your message. Please try again later.",
   "set_lang": "Set bot message language to {}.",
   "missing_args": "Missing arguments: {}",
-  "available_langs": "Available languages: {}"
+  "available_langs": "Available languages: {}",
+  "cmd_scream": "aaaaaaaaaaa~"
 }

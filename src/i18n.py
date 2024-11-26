@@ -34,16 +34,18 @@ class Langs(enum.Enum):
 
 
 class Keys(enum.Enum):
-    RAN_OUT_QUESTIONS = 'ran_out_questions'
-    COUNTDOWN = 'countdown'
-    CMD_HELP = 'cmd_help'
-    CMD_TOGGLE_ENABLE = 'cmd_toggle_enable'
-    CMD_TOGGLE_DISABLE = 'cmd_toggle_disable'
-    CMD_UNKNOWN = 'cmd_unknown'
     PROCESSING_ERROR = 'processing_error'
     SET_LANG = 'set_lang'
     MISSING_ARGS = 'missing_args'
     AVAILABLE_LANGS = 'available_langs'
+    RAN_OUT_QUESTIONS = 'ran_out_questions'
+    COUNTDOWN = 'countdown'
+
+    CMD_HELP = 'cmd_help'
+    CMD_TOGGLE_ENABLE = 'cmd_toggle_enable'
+    CMD_TOGGLE_DISABLE = 'cmd_toggle_disable'
+    CMD_UNKNOWN = 'cmd_unknown'
+    CMD_SCREAM = 'cmd_scream'
 
 
 class I18nManager:

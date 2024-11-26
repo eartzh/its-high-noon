@@ -8,5 +8,6 @@
   "processing_error": "我們無法處理你的訊息，請稍候再試。",
   "set_lang": "將機器人的語言設為{}",
   "missing_arg": "缺少所需的參數：{}",
-  "available_langs": "可選的語言：{}"
+  "available_langs": "可選的語言：{}",
+  "cmd_scream": "哼哼哼哼哼啊啊啊啊啊"
 }

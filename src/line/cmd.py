@@ -61,4 +61,4 @@ class CommandBuilder:
             raise MissingArgumentsError(command_name, command.required_args)
 
         # Execute command with both required and optional args
-        return command.func(*args, ctx=ctx)
+        return command.func(ctx, *args, )
