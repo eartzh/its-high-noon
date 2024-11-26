@@ -6,5 +6,6 @@
   "cmd_toggle_disable": "You will not receive question from the bot now.",
   "cmd_unknown": "Unknown command. Type /help for more information.",
   "processing_error": "Sorry, I couldn't process your message. Please try again later.",
-  "set_lang": "Set bot message language to {}."
+  "set_lang": "Set bot message language to {}.",
+  "missing_args": "Missing arguments: {}"
 }

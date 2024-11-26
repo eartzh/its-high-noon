@@ -141,7 +141,9 @@ def cmd_dispatch(cmd: str, args: str, ctx: ProcessContext) -> str:
             else:
                 return I18N.get(Keys.CMD_TOGGLE_DISABLE, ctx.lang)
         case "lang":
-            lang = args
+            lang = args.split(maxsplit=1)[0]
+            if len(lang) == 0:
+                return I18N.get(Keys.MISSING_ARGS, ctx.lang).format("<lang id>")
             user.set_lang(ctx.user_id, lang)
             return I18N.get(Keys.SET_LANG, ctx.lang).format(lang)
         case _:

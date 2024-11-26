@@ -15,6 +15,7 @@ class Keys(enum.Enum):
     CMD_UNKNOWN = 'cmd_unknown'
     PROCESSING_ERROR = 'processing_error'
     SET_LANG = 'set_lang'
+    MISSING_ARGS = 'missing_args'
 
 
 class I18nManager:
