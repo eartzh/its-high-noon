@@ -41,7 +41,7 @@ async def callback():
         abort(500, description="Internal server error")
 
 
-def send_reply(event: MessageEvent, reply_text: str) -> None:
+def send_reply(event: MessageEvent, reply_text: str, quote_token=Optional[str]) -> None:
     """Send a reply message to LINE."""
 
     with ApiClient(CONFIGURATION) as api_client:
@@ -54,7 +54,7 @@ def send_reply(event: MessageEvent, reply_text: str) -> None:
                     TextMessage(
                         text=StrictStr(reply_text),
                         quickReply=None,
-                        quoteToken=None,
+                        quoteToken=StrictStr(quote_token) if quote_token else None,
                     )
                 ],
             ),
@@ -79,6 +79,7 @@ class ProcessContext:
     event: MessageEvent
     user_id: Optional[str]
     lang: Langs
+    quote_token: Optional[str]
 
 
 @HANDLER.add(MessageEvent, message=TextMessageContent)
@@ -93,7 +94,12 @@ def message(event: MessageEvent) -> None:
             loading_animate(user_id)
             user.create(user_id)
 
-        ctx = ProcessContext(event, user_id, Langs.from_str(user.get_lang(user_id)))
+        ctx = ProcessContext(
+            event,
+            user_id,
+            Langs.from_str(user.get_lang(user_id)),
+            None
+        )
         LOGGER.debug(
             "Context: user_id=%s, lang=%s",
             ctx.user_id, ctx.lang
@@ -105,7 +111,7 @@ def message(event: MessageEvent) -> None:
             return
 
         LOGGER.debug("Sent reply: %s", reply)
-        send_reply(event, reply)
+        send_reply(event, reply, ctx.quote_token)
 
     except Exception as e:
         LOGGER.error("Error processing message: %s", str(e), exc_info=True)
@@ -168,6 +174,7 @@ def process_message(ctx: ProcessContext) -> str | None:
     # A text event
     if isinstance(ctx.event.message, TextMessageContent):
         text = ctx.event.message.text.strip()
+        ctx.quote_token = ctx.event.message.quote_token
         LOGGER.debug(
             "Received text message: text=%s, user_id=%s, lang=%s",
             text, ctx.user_id, ctx.lang
