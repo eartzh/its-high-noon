@@ -38,3 +38,35 @@ Submit a new question to the database.
 - **Responses**:
     - `200 OK`: Question successfully created.
     - `400 Bad Request`: A required field is missing (returns the name of the missing field).
+
+## Send
+
+### `/send/question`
+
+**Rate Limited** - **Local Only**
+
+Send a question to users who want to receive msg from bot.
+
+- **Request**: Any
+- **Response**:
+  - `200 OK`
+
+### `/send/answer`
+
+**Rate Limited** - **Local Only**
+
+Send an answer to users who want to receive msg from bot.
+
+- **Request**: Any
+- **Response**:
+  - `200 OK`
+
+### `/send/countdown`
+
+**Rate Limited** - **Local Only**
+
+Send a countdown message to users who want to receive msg from bot.
+
+- **Request**: Any
+- **Response**:
+  - `200 OK`

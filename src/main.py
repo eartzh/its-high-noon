@@ -87,6 +87,31 @@ async def new_question():
     question.create(*fields_data)
     return "", 200
 
+
+@APP.route("/send/question", methods=["GET"])
+@local_only
+@rate_limited
+async def send_question():
+    line.daily.send_question()
+    return "", 200
+
+
+@APP.route("/send/answer", methods=["GET"])
+@local_only
+@rate_limited
+async def send_answer():
+    line.daily.send_answer()
+    return "", 200
+
+
+@APP.route("/send/countdown", methods=["GET"])
+@local_only
+@rate_limited
+async def send_countdown():
+    line.daily.send_countdown()
+    return "", 200
+
+
 #######################
 
 ## Register scheduler ##
