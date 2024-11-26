@@ -129,8 +129,12 @@ def cmd_toggle(ctx):
 
 
 def cmd_lang(lang, ctx):
+    # validate lang
+    lang = Langs.from_str(lang)
+    lang = lang.value
+
     user.set_lang(ctx.user_id, lang)
-    return I18N.get(Keys.SET_LANG, ctx.lang).format(lang.value)
+    return I18N.get(Keys.SET_LANG, ctx.lang).format(lang)
 
 
 def cmd_6(ctx):
