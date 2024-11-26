@@ -12,17 +12,17 @@ class Langs(enum.Enum):
 
     @classmethod
     def from_str(cls, lang: str):
+        lang = lang.strip().lower()
+
         if lang is None:
             return cls.EN
 
-        lang = lang.lower()
-
         # handle special cases
-        if lang == 'zh-tw':
+        elif lang == 'zh-tw':
             return cls.ZH_TW
 
         for l in cls:
-            if l == lang:
+            if l.value == lang:
                 return l
         return cls.EN
 

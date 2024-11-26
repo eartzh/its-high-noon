@@ -12,6 +12,7 @@ from src.const import I18N
 from src.database import user
 from src.i18n import Keys, Langs
 from src.line import HANDLER, CONFIGURATION
+from src.line.cmd import CommandBuilder, UnknownCommandError, MissingArgumentsError, NoCommandError
 
 LOGGER = logging.getLogger("line-webhook")
 
@@ -112,42 +113,58 @@ def message(event: MessageEvent) -> None:
         send_reply(event, I18N.get(Keys.PROCESSING_ERROR))
 
 
+CMD = CommandBuilder()
+
+
+def cmd_help(ctx):
+    return I18N.get(Keys.CMD_HELP, ctx.lang)
+
+
+def cmd_toggle(ctx):
+    status = user.toggle_enabled(ctx.user_id)
+    if status:
+        return I18N.get(Keys.CMD_TOGGLE_ENABLE, ctx.lang)
+    else:
+        return I18N.get(Keys.CMD_TOGGLE_DISABLE, ctx.lang)
+
+
+def cmd_lang(lang, ctx):
+    user.set_lang(ctx.user_id, lang)
+    return I18N.get(Keys.SET_LANG, ctx.lang).format(lang.value)
+
+
+def cmd_6(ctx):
+    return "6"
+
+
+CMD.register_command("help", cmd_help)
+CMD.register_command("toggle", cmd_toggle)
+CMD.register_command("lang", cmd_lang, ["lang"])
+CMD.register_command("6", cmd_6)
+
+
 def process_message(ctx: ProcessContext) -> str | None:
     """Process incoming message and generate reply."""
     # A text event
     if isinstance(ctx.event.message, TextMessageContent):
         text = ctx.event.message.text.strip()
+        LOGGER.debug(
+            "Received text message: text=%s, user_id=%s, lang=%s",
+            text, ctx.user_id, ctx.lang
+        )
+
         if text.startswith("/"):
-            args = text.split(" ", 1)
-            cmd = args[0][1:]
-            if len(args) < 2:
-                return cmd_dispatch(cmd, "", ctx)
-            else:
-                return cmd_dispatch(cmd, args[1], ctx)
+            try:
+                return CMD.parse_and_execute(text[1:], ctx)
+            except NoCommandError:
+                return "owob"
+            except UnknownCommandError:
+                return I18N.get(Keys.CMD_UNKNOWN, ctx.lang)
+            except MissingArgumentsError as e:
+                return I18N.get(Keys.MISSING_ARGS, ctx.lang).format(str(e.missing_args))
+
         elif ("uwu", "UwU", "OuO", "ouo").__contains__(text):
             return "Ciallo (∠·ω )⌒★"
 
     return None
 
-
-def cmd_dispatch(cmd: str, args: str, ctx: ProcessContext) -> str:
-    match cmd:
-        case "help":
-            return I18N.get(Keys.CMD_HELP, ctx.lang)
-        case "toggle":
-            status = user.toggle_enabled(ctx.user_id)
-            if status:
-                return I18N.get(Keys.CMD_TOGGLE_ENABLE, ctx.lang)
-            else:
-                return I18N.get(Keys.CMD_TOGGLE_DISABLE, ctx.lang)
-        case "lang":
-            if not args:
-                return I18N.get(Keys.MISSING_ARGS, ctx.lang).format("<lang id>")
-
-            lang = Langs.from_str(args.split(maxsplit=1).__getitem__(0))
-            user.set_lang(ctx.user_id, lang.value)
-            return I18N.get(Keys.SET_LANG, ctx.lang).format(lang.value)
-        case "6":
-            return "6"
-        case _:
-            return I18N.get(Keys.CMD_UNKNOWN, ctx.lang)
