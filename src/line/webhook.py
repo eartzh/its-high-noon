@@ -10,7 +10,7 @@ from quart import request, abort
 
 from src.const import I18N
 from src.database import user
-from src.i18n import Keys
+from src.i18n import Keys, Langs
 from src.line import HANDLER, CONFIGURATION
 
 LOGGER = logging.getLogger("line-webhook")
@@ -77,7 +77,7 @@ def loading_animate(chat_id: str) -> None:
 class ProcessContext:
     event: MessageEvent
     user_id: Optional[str]
-    lang: Optional[str]
+    lang: Langs
 
 
 @HANDLER.add(MessageEvent, message=TextMessageContent)
@@ -92,7 +92,7 @@ def message(event: MessageEvent) -> None:
             loading_animate(user_id)
             user.create(user_id)
 
-        ctx = ProcessContext(event, user_id, user.get_lang(user_id) if user_id else None)
+        ctx = ProcessContext(event, user_id, Langs.from_str(user.get_lang(user_id)))
         LOGGER.debug(
             "Context: user_id=%s, lang=%s",
             ctx.user_id, ctx.lang

@@ -6,6 +6,27 @@ import os
 LOGGER = logging.getLogger("i18n")
 
 
+class Langs(enum.Enum):
+    EN = 'en'
+    ZH_TW = 'zh_tw'
+
+    @classmethod
+    def from_str(cls, lang: str):
+        if lang is None:
+            return cls.EN
+
+        lang = lang.lower()
+
+        # handle special cases
+        if lang == 'zh-tw':
+            return cls.ZH_TW
+
+        for l in cls:
+            if l == lang:
+                return l
+        return cls.EN
+
+
 class Keys(enum.Enum):
     RAN_OUT_QUESTIONS = 'ran_out_questions'
     COUNTDOWN = 'countdown'
@@ -19,7 +40,7 @@ class Keys(enum.Enum):
 
 
 class I18nManager:
-    def __init__(self, locale_directory='locales', default_locale='en'):
+    def __init__(self, locale_directory: str, default_locale: Langs):
         self.locale_directory = locale_directory
         self.translations = {}
         self.default_locale = default_locale
@@ -33,6 +54,6 @@ class I18nManager:
                 with open(os.path.join(self.locale_directory, filename), 'r', encoding='utf-8') as file:
                     self.translations[locale] = json.load(file)
 
-    def get(self, key: Keys, locale=None) -> str:
+    def get(self, key: Keys, locale: Langs = Langs.EN) -> str:
         key = key.value
-        return self.translations.get(locale or self.default_locale, {}).get(key, key)
+        return self.translations.get(locale.value, {}).get(key, key)

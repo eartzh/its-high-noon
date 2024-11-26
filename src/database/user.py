@@ -52,7 +52,7 @@ def get_all() -> Dict[str, List[str]]:
     return users
 
 
-def get_lang(user_id: str) -> Optional[bool]:
+def get_lang(user_id: str) -> Optional[str]:
 
     result = DATABASE.execute(
         "SELECT lang FROM Users WHERE id = %s",
