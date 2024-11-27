@@ -99,5 +99,5 @@ def send_countdown():
 
 def register():
     SCHEDULER.register(send_countdown, "00:00", True)
-    SCHEDULER.register(send_question, "08:00", True)
-    SCHEDULER.register(send_answer, "10:00", True)
+    SCHEDULER.register(send_question, "00:00", True)
+    SCHEDULER.register(send_answer, "02:00", True)

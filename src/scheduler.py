@@ -1,12 +1,12 @@
 import logging
+import threading
+import time
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Callable, Any, Optional, Dict, List
+from uuid import uuid4, UUID
 
 import schedule
-import time
-from datetime import datetime
-import threading
-from typing import Callable, Any, Optional, Dict, List, NamedTuple
-from dataclasses import dataclass
-from uuid import uuid4, UUID
 
 LOGGER = logging.getLogger("scheduler")
 
@@ -47,7 +47,7 @@ class Scheduler:
 
         Args:
             callback (Callable): The function to be called at the scheduled time
-            schedule_time (str): Time to schedule daily callback (24-hour format, e.g. "08:00")
+            schedule_time (str): Time to schedule daily callback (UTC+0, 24-hour format, e.g. "08:00")
             enabled (bool): Whether the callback should be enabled immediately
             **callback_kwargs: Additional keyword arguments to pass to the callback function
 

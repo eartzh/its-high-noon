@@ -127,7 +127,7 @@ def cmd_scream(ctx):
     return I18N.get(Keys.CMD_SCREAM, ctx.lang)
 
 
-def cmd_ping(ctx):
+def cmd_ping(_):
     return "pong"
 
 
