@@ -65,11 +65,13 @@ class CommandBuilder:
         if len(args) < len(command.required_args):
             raise MissingArgumentsError(command_name, command.required_args)
 
+        args_amount = len(command.required_args) + (len(command.optional_args) if command.optional_args else 0)
+
         # Execute command with both required and optional args
-        return command.func(ctx, *args, )
+        return command.func(ctx, *args[: args_amount])
 
 
-#########################################################3
+#########################################################
 
 CMD = CommandBuilder()
 
@@ -114,6 +116,9 @@ def cmd_6(_):
     return "6"
 
 
+def cmd_114(_):
+    return "514"
+
 def cmd_roll(_):
     return random.randint(1, 6)
 
@@ -131,7 +136,7 @@ CMD.register_command("toggle", cmd_toggle)
 CMD.register_command("lang", cmd_lang, [], ["lang"])
 CMD.register_command("echo", cmd_echo, ["msg"])
 CMD.register_command("6", cmd_6)
-CMD.register_command("114", cmd_6)
+CMD.register_command("114", cmd_114)
 CMD.register_command("roll", cmd_roll)
 CMD.register_command("scream", cmd_scream)
 CMD.register_command("ping", cmd_ping)
