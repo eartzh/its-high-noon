@@ -47,7 +47,10 @@ class Keys(enum.Enum):
     CMD_UNKNOWN = 'cmd_unknown'
     CMD_SCREAM = 'cmd_scream'
     EAT_REPLY = 'eat_reply'
-    EAT_RESPOND = 'eat_respond'
+    EAT_RESPONCE = 'eat_response'
+    CMD_ABOUT = 'cmd_about'
+    JOKE_REPLY = 'joke_reply'
+    JOKE_RESPONCE = 'joke_response'
 
 
 class I18nManager:
