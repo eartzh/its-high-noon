@@ -1,12 +1,18 @@
+import dataclasses
+import logging
+from typing import Optional
+
 from linebot.v3.exceptions import InvalidSignatureError
-from linebot.v3.messaging import ApiClient, MessagingApi, ReplyMessageRequest, TextMessage
-from linebot.v3.webhooks import MessageEvent, TextMessageContent
-from src.database.id import NotificationManager
+from linebot.v3.messaging import ApiClient, MessagingApi, ReplyMessageRequest, TextMessage, ShowLoadingAnimationRequest
+from linebot.v3.webhooks import MessageEvent, TextMessageContent, UserSource, GroupSource
 from pydantic import StrictStr, StrictBool
 from quart import request, abort
 
-import logging
+from src.const import I18N
+from src.database import user
+from src.i18n import Keys, Langs
 from src.line import HANDLER, CONFIGURATION
+from src.line.cmd import UnknownCommandError, MissingArgumentsError, NoCommandError, CMD
 
 LOGGER = logging.getLogger("line-webhook")
 
@@ -18,7 +24,6 @@ async def callback():
         body = await request.get_data(as_text=True)
 
         LOGGER.info("Received webhook: length=%d", len(body))
-        LOGGER.trace("Request body: %s", body)
 
         HANDLER.handle(body, signature)
         return "OK", 200
@@ -36,7 +41,7 @@ async def callback():
         abort(500, description="Internal server error")
 
 
-def send_reply(event: MessageEvent, reply_text: StrictStr) -> None:
+def send_reply(event: MessageEvent, reply_text: str, quote_token=Optional[str]) -> None:
     """Send a reply message to LINE."""
 
     with ApiClient(CONFIGURATION) as api_client:
@@ -47,9 +52,9 @@ def send_reply(event: MessageEvent, reply_text: StrictStr) -> None:
                 notificationDisabled=StrictBool(False),
                 messages=[
                     TextMessage(
-                        text=reply_text,
+                        text=StrictStr(reply_text),
                         quickReply=None,
-                        quoteToken=None,
+                        quoteToken=StrictStr(quote_token) if quote_token else None,
                     )
                 ],
             ),
@@ -57,51 +62,88 @@ def send_reply(event: MessageEvent, reply_text: StrictStr) -> None:
         )
 
 
+def loading_animate(chat_id: str) -> None:
+    """Send a loading animation to LINE."""
+    with ApiClient(CONFIGURATION) as api_client:
+        line_bot_api = MessagingApi(api_client)
+        line_bot_api.show_loading_animation(show_loading_animation_request=ShowLoadingAnimationRequest(
+            loadingSeconds=20,
+            chatId=StrictStr(chat_id)
+        ))
+
+
+#########################################################
+
+@dataclasses.dataclass
+class ProcessContext:
+    event: MessageEvent
+    user_id: Optional[str]
+    lang: Langs
+    quote_token: Optional[str]
+
+
 @HANDLER.add(MessageEvent, message=TextMessageContent)
-def message_text(event: MessageEvent) -> None:
+def message(event: MessageEvent) -> None:
     """Handle incoming text messages."""
     try:
-        received: str = event.message.text
-        LOGGER.debug("Received text: %s", received)
+        LOGGER.debug("Received request: %s", event)
 
-        reply = process_message(received)
+        user_id = None
+        if isinstance(event.source, UserSource) or isinstance(event.source, GroupSource):
+            user_id = event.source.user_id
+            loading_animate(user_id)
+            user.create(user_id)
+
+        ctx = ProcessContext(
+            event,
+            user_id,
+            Langs.from_str(user.get_lang(user_id)),
+            None
+        )
+        LOGGER.debug(
+            "Context: user_id=%s, lang=%s",
+            ctx.user_id, ctx.lang
+        )
+
+        reply = process_message(ctx)
+
+        if not reply:
+            return
+
         LOGGER.debug("Sent reply: %s", reply)
-
-        send_reply(event, reply)
+        send_reply(event, reply, ctx.quote_token)
 
     except Exception as e:
         LOGGER.error("Error processing message: %s", str(e), exc_info=True)
         # Send a generic error message to user
-        send_reply(event, "Sorry, I couldn't process your message. Please try again later.")
+        send_reply(event, I18N.get(Keys.PROCESSING_ERROR))
 
 
-def process_message(event: MessageEvent) -> StrictStr:
+
+def process_message(ctx: ProcessContext) -> str | None:
     """Process incoming message and generate reply."""
-    user_message = event.message.text
-    source_type = event.source.type
-
-    if source_type == "group":
-        group_id = event.source.group_id
-        if user_message == "開啟通知":
-            notification_manager.add_group(group_id)
-            reply_text = "此群組已成功啟用通知功能！"
-    elif source_type == "user":
-        user_id = event.source.user_id
-        if user_message == "開啟通知":
-            notification_manager.add_user(user_id)
-            reply_text = "您已成功啟用通知功能！"
-    else:
-        reply_text = "目前不支援此類型的來源。"
-
-    with ApiClient(CONFIGURATION) as api_client:
-        line_bot_api = MessagingApi(api_client)
-        line_bot_api.reply_message(
-            ReplyMessageRequest(
-                reply_token=event.reply_token,
-                messages=[TextMessage(text=reply_text)]
-            )
+    # A text event
+    if isinstance(ctx.event.message, TextMessageContent):
+        text = ctx.event.message.text.strip()
+        ctx.quote_token = ctx.event.message.quote_token
+        LOGGER.debug(
+            "Received text message: text=%s, user_id=%s, lang=%s",
+            text, ctx.user_id, ctx.lang
         )
 
-    return reply_text
+        if text.startswith("/"):
+            try:
+                return CMD.parse_and_execute(text[1:], ctx)
+            except NoCommandError:
+                return "owob"
+            except UnknownCommandError:
+                return I18N.get(Keys.CMD_UNKNOWN, ctx.lang)
+            except MissingArgumentsError as e:
+                return I18N.get(Keys.MISSING_ARGS, ctx.lang).format(str(e.missing_args))
 
+        elif ("ouo" in text.lower()
+              or "owo" in text.lower()
+              or "uwu" in text.lower()):
+            return "Ciallo (∠·ω )⌒★"
 
+    return None

@@ -1,0 +1,13 @@
+{
+  "ran_out_questions": "We ran out of questions!!!",
+  "countdown": "{} days remains to GSAT!!!",
+  "cmd_help": "Available commands: help, toggle, lang",
+  "cmd_toggle_enable": "You will receive question from the bot now.",
+  "cmd_toggle_disable": "You will not receive question from the bot now.",
+  "cmd_unknown": "Unknown command. Type /help for more information.",
+  "processing_error": "Sorry, I couldn't process your message. Please try again later.",
+  "set_lang": "Set bot message language to {}.",
+  "missing_args": "Missing arguments: {}",
+  "available_langs": "Available languages: {}",
+  "cmd_scream": "aaaaaaaaaaa~"
+}
